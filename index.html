@@ -24,7 +24,7 @@ nav button.mid{flex:0 0 66px;height:66px;margin-top:-28px;padding:0;background:v
 img.pv{width:100%;border-radius:12px;margin:8px 0}
 </style></head><body>
 <main id="app"></main><nav id="nav"></nav>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
 <script>
 var sb=supabase.createClient("https://eonpkjiirluoaenlbzhh.supabase.co","sb_publishable_-DDHp86PxnOJ-0qXWckzHQ_iawikZEV");
 var TABS={home:["🏠","ACCUEIL"],tuto:["📚","TUTORIELS"],diag:["📷","DIAGNOSTIC"],moto:["🏍️","MA MOTO"],acc:["👤","MON COMPTE"]};
@@ -48,7 +48,8 @@ function note(){return msg?'<div class="card warn"><small style="color:#fff">'+e
 async function init(){try{var r=await sb.auth.getSession();U=r.data.session?r.data.session.user:null;if(U)await load()}catch(e){msg="Connexion impossible : "+e.message}render()}
 async function load(){var a=await sb.from("motos").select("*").order("created_at"),b=await sb.from("entretiens").select("*").order("created_at",{ascending:false});
 if(a.error||b.error)msg="Erreur base de données : "+(a.error||b.error).message;motos=a.data||[];log=b.data||[];render()}
-async function auth(mode){var e=v("le"),p=document.getElementById("lp").value;
+async function auth(mode){var e=v("le"),p=document.getElementById("lp").value;msg="Patiente un instant...";render();try{await auth2(mode,e,p)}catch(x){msg="Erreur : "+(x&&x.message?x.message:x);render()}}
+async function auth2(mode,e,p){
 if(!e||p.length<6){msg="Entre un e-mail et un mot de passe de 6 caractères minimum.";render();return}
 var r=mode=="up"?await sb.auth.signUp({email:e,password:p}):await sb.auth.signInWithPassword({email:e,password:p});
 if(r.error){msg=r.error.message;render();return}
@@ -83,5 +84,7 @@ function render(){var n=document.getElementById("nav"),a=document.getElementById
 if(!U){a.innerHTML=login();n.innerHTML="";return}
 var f={home:home,diag:diag,tuto:tuto,moto:moto,acc:acc};a.innerHTML=f[tab]();
 n.innerHTML=["home","tuto","diag","moto","acc"].map(function(k){return '<button class="'+(k==tab?"on ":"")+(k=="diag"?"mid":"")+'" onclick="go(\''+k+'\')"><span>'+TABS[k][0]+'</span>'+TABS[k][1]+'</button>'}).join("")}
+window.onerror=function(m){msg="Erreur : "+m;try{render()}catch(x){}};
+window.addEventListener("unhandledrejection",function(ev){msg="Erreur : "+(ev.reason&&ev.reason.message?ev.reason.message:ev.reason);render()});
 init();
 </script></body></html>
